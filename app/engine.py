@@ -74,18 +74,8 @@ def decide(state, predictor, allow_questions=True):
     if crisis:
         return {**res, "status": "operator", "reason": REASONS["urgent"]}
 
-    # 3) model "boshqa" dedi
-    if best == "boshqa":
-        return other(other_subtype(state["norm"]))
-
-    # 4) notanish murojaat (E5 masofasi) — faqat model ham juda ishonchli bo'lmasa
-    tau = predictor.ood_tau
-    if tau is not None and state.get("ood_sim") is not None and state["ood_sim"] < tau and conf < 0.9 \
-            and not state["answers"]:
-        res["steps"].append({"step": "ood", "sim": round(state["ood_sim"], 3), "tau": round(tau, 3)})
-        return {**res, "status": "operator", "reason": REASONS["unknown"]}
-
-    # 5a) qisqa va noaniq shikoyat — model ishonchli bo'lsa ham bir marta aniqlashtiramiz
+    # 3a) qisqa va noaniq shikoyat ("qornim og'riyapti") — mavzu aniq tibbiy, lekin bo'lim noaniq:
+    #     OOD/"boshqa" tekshiruvidan oldin, model ishonchli bo'lsa ham bir marta aniqlashtiramiz
     if allow_questions and not urgent and not state["asked"]:
         cands, depts = clarify.vague_candidates(state["norm"])
         if cands:
@@ -98,6 +88,17 @@ def decide(state, predictor, allow_questions=True):
                 state["asked"].append(qid)
                 res["steps"].append({"step": "vague", "q": qid, "gain": round(gain, 3)})
                 return {**res, "status": "question", "question": clarify.public(clarify._BY_ID[qid]), "reason": None}
+
+    # 3) model "boshqa" dedi
+    if best == "boshqa":
+        return other(other_subtype(state["norm"]))
+
+    # 4) notanish murojaat (E5 masofasi) — faqat model ham juda ishonchli bo'lmasa
+    tau = predictor.ood_tau
+    if tau is not None and state.get("ood_sim") is not None and state["ood_sim"] < tau and conf < 0.9 \
+            and not state["answers"]:
+        res["steps"].append({"step": "ood", "sim": round(state["ood_sim"], 3), "tau": round(tau, 3)})
+        return {**res, "status": "operator", "reason": REASONS["unknown"]}
 
     # 5) ishonchli (bemor savollarga javob bergan va bitta bo'lim aniq oldinda bo'lsa — biroz pastroq chegara)
     second = float(P[order[1]]) if len(order) > 1 else 0.0

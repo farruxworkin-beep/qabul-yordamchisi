@@ -204,6 +204,8 @@ def temper(P, labels, depts=(), T=TEMPERATURE, mix=TOPIC_MIX):
     if idx:
         topic = np.zeros(len(P)); topic[idx] = 1.0 / len(idx)
         Q[mask] = (1 - mix) * Q[mask] + mix * topic[mask]
+    if idx and keep is not None:
+        P = P.copy(); P[keep] = 0.0      # mavzu tibbiy va shifoxonada bor — "boshqa" emas
     rest = 1 - (P[keep] if keep is not None else 0)
     Q[mask] = Q[mask] / Q[mask].sum() * rest
     if keep is not None:
