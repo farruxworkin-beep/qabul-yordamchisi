@@ -14,17 +14,18 @@ function caseHtml(c) {
   if (c.urgent) tags.push(`<span class="tag red">${t("st_urgent")}</span>`);
   tags.push(`<span class="tag ${c.status === "other" ? "amber" : "green"}">${t("st_" + c.status) || c.status}</span>`);
   if (done) tags.push(`<span class="tag green">${t("confirmed")}: ${esc(DEPTS[c.operator_dept]?.[LANG] || c.operator_dept)}</span>`);
-  const ai = (r.top || []).map((x) => `${esc(x.name[LANG])} ${pct(x.p)}`).join(" · ");
+  const ai = (r.top || []).map((x) => `<li><span>${esc(x.name[LANG])}</span>
+    <div class="meter"><span style="width:${pct(x.p)}"></span></div><b class="mono">${pct(x.p)}</b></li>`).join("");
   const answers = (c.answers_text || []).length
     ? `<div class="case-ai">${t("answers")}: ${c.answers_text.map((a) => esc(a.question[LANG] + " — " + a.answer[LANG])).join("; ")}</div>` : "";
   const flags = (r.flags_text || []).map((f) => esc(f[LANG])).join("; ");
   const options = Object.entries(DEPTS).map(([k, v]) =>
     `<option value="${k}" ${k === (c.operator_dept || r.department) ? "selected" : ""}>${esc(v[LANG])}</option>`).join("");
   return `<article class="case ${kind} ${done ? "is-done" : ""}" data-id="${c.id}">
-    <div class="case-head">#${c.id} · ${fmtTime(c.created)} ${tags.join(" ")}</div>
+    <div class="case-head"><span class="case-id">#${c.id}</span><span>${fmtTime(c.created)}</span>${tags.join("")}</div>
     <p class="case-text">${esc(c.text)}</p>
-    ${flags ? `<div class="case-ai" style="color:var(--pomegranate)">${flags}</div>` : ""}
-    <div class="case-ai">${t("ai_says")}: ${ai || "—"}</div>${answers}
+    ${flags ? `<div class="case-flags">${flags}</div>` : ""}
+    <div class="case-ai">${t("ai_says")}</div>${ai ? `<ul class="case-top">${ai}</ul>` : "<div class=\"case-ai\">—</div>"}${answers}
     <form class="case-form">
       <select aria-label="${t("choose_dept")}" name="dept">${options}</select>
       <input name="note" placeholder="${t("note_ph")}" maxlength="500" value="${esc(c.operator_note || "")}">
