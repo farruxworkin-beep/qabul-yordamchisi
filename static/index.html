@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Qabul yordamchisi</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="ikat" aria-hidden="true"></div>
+  <header class="bar">
+    <a class="brand" href="/" data-t="brand">Qabul yordamchisi</a>
+    <nav class="nav">
+      <a href="/operator" data-t="nav_operator">Operator</a>
+      <div class="lang" role="group" aria-label="Til / Язык">
+        <button type="button" data-lang="uz">O'zb</button><button type="button" data-lang="ru">Рус</button>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <h1 id="title" data-t="h1">Nima bezovta qilyapti?</h1>
+    <p class="lead" data-t="lead"></p>
+
+    <form id="form">
+      <textarea id="complaint" aria-labelledby="title" data-t-ph="placeholder" maxlength="1500" required></textarea>
+      <div class="examples" id="examples"></div>
+      <div class="actions">
+        <button class="btn" id="submit" type="submit" data-t="submit">Bo'limni aniqlash</button>
+        <button class="btn ghost" id="reset" type="button" data-t="reset" hidden>Yangi murojaat</button>
+      </div>
+      <p class="error" id="error" role="alert" hidden></p>
+    </form>
+
+    <section class="result" id="result" aria-live="polite"></section>
+
+    <p class="note" data-t="note"></p>
+  </main>
+  <script src="/static/common.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

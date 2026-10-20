@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistika</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="ikat" aria-hidden="true"></div>
+  <header class="bar" style="max-width:1040px">
+    <a class="brand" href="/" data-t="brand">Qabul yordamchisi</a>
+    <nav class="nav">
+      <a href="/" data-t="nav_patient">Murojaat</a>
+      <a href="/operator" data-t="nav_operator">Operator</a>
+      <div class="lang" role="group" aria-label="Til / Язык">
+        <button type="button" data-lang="uz">O'zb</button><button type="button" data-lang="ru">Рус</button>
+      </div>
+    </nav>
+  </header>
+  <main class="wide">
+    <h1 data-t="stats_title">Statistika</h1>
+    <div id="content"><p class="empty"><a href="/operator" data-t="login">Kirish</a></p></div>
+  </main>
+  <script src="/static/common.js"></script>
+  <script>
+    let S = null, I = null, D = {};
+    function render() {
+      if (!S) return;
+      const st = S.by_status, routed = st.routed || 0, total = S.total || 0;
+      const tile = (v, k) => `<div class="stat"><b>${v}</b><span>${t(k)}</span></div>`;
+      const max = Math.max(1, ...Object.values(S.by_department));
+      const agree = S.operator_checked_routed ? pct(S.operator_agreed / S.operator_checked_routed) : "—";
+      document.getElementById("content").innerHTML = `
+        <div class="stats">
+          ${tile(total, "s_total")}
+          ${tile(total ? pct(routed / total) : "—", "s_auto")}
+          ${tile((st.operator || 0) + (st.other || 0), "s_operator")}
+          ${tile(S.pending, "s_pending")}
+          ${tile(S.urgent, "s_urgent")}
+          ${tile(S.with_questions, "s_questions")}
+          ${tile(agree, "s_agree")}
+        </div>
+        <div class="panel" style="margin-top:18px"><h2>${t("s_by_dept")}</h2><ul class="bars">
+          ${Object.entries(S.by_department).map(([k, v]) => `<li><span>${esc(D[k]?.[LANG] || k)}</span>
+            <div class="meter"><span style="width:${(v / max) * 100}%"></span></div><span class="mono">${v}</span></li>`).join("")}
+        </ul></div>
+        <div class="panel"><h2>${t("s_model")}</h2>
+          <p class="mono">${esc(I.mode)} — ${Object.entries(I.weights).map(([k, w]) => `${esc(k)} ${Math.round(w * 100)}%`).join(", ")}</p>
+          ${I.test ? `<p class="reason">Toza test / чистый тест: ${pct(I.test["qat'iy"] ?? I.test.accuracy ?? 0)}</p>` : ""}
+        </div>`;
+    }
+    initLang(render);
+    Promise.all([api("/api/stats"), api("/api/info"), api("/api/departments")])
+      .then(([s, i, d]) => { S = s; I = i; D = d; render(); })
+      .catch(() => {});
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "labels": [
+    "boshqa",
+    "dermatologiya",
+    "gastroenterologiya",
+    "ginekologiya_urologiya",
+    "kardiologiya",
+    "laboratoriya",
+    "lor",
+    "nevrologiya",
+    "pediatriya",
+    "terapiya",
+    "travmatologiya"
+  ],
+  "weights": {
+    "TF-IDF": 1.0
+  },
+  "threshold": 0.6,
+  "note": "Zaxira model (TF-IDF). Haqiqiy ensemble uchun triage_models_vX ni models/ ga oching."
+}

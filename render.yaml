@@ -1,0 +1,15 @@
+# Render.com (bepul) — zaxira TF-IDF modeli bilan doimiy havola
+services:
+  - type: web
+    name: qabul-yordamchisi
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: OPERATOR_PASSWORD
+        sync: false
+      - key: TRIAGE_SECRET
+        generateValue: true

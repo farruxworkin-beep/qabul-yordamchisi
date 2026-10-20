@@ -1,0 +1,8 @@
+# Asosiy (zaxira TF-IDF rejimi uchun yetarli)
+fastapi==0.150.0
+uvicorn==0.53.0
+scikit-learn==1.9.1
+numpy==2.5.3
+pandas==3.0.5
+joblib==1.6.0
+huggingface_hub
