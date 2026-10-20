@@ -5,8 +5,8 @@ gh = getpass.getpass("GitHub token — Render saytini yangilash uchun (o'tkazish
 if gh:
     try:
         shutil.rmtree("gh_repo", ignore_errors=True)
-        url = f"https://x-access-token:{gh}@github.com/{GITHUB_REPO}.git"
-        subprocess.run(["git", "clone", "-q", url, "gh_repo"], check=True, capture_output=True)
+        _gh_url = f"https://x-access-token:{gh}@github.com/{GITHUB_REPO}.git"
+        subprocess.run(["git", "clone", "-q", _gh_url, "gh_repo"], check=True, capture_output=True)
         for item in os.listdir("gh_repo"):
             if item != ".git":
                 p = os.path.join("gh_repo", item)
@@ -27,4 +27,5 @@ if gh:
     finally:
         shutil.rmtree("gh_repo", ignore_errors=True)
 del gh
+if '_gh_url' in globals(): del _gh_url
 

@@ -18,4 +18,4 @@ else:
             time.sleep(2)
             if srv.poll() is not None:
                 print(open("server.log").read()[-3000:]); raise SystemExit("Server ishga tushmadi")
-    print("✅ Yangi kod ishlayapti. Havola o'sha:", url)
+    print("✅ Yangi kod ishlayapti. Havola o'sha:", globals().get("DEMO_URL", "(10-bo'limdagi havola)"))

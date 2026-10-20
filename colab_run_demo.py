@@ -51,7 +51,7 @@ for _ in range(60):
     time.sleep(1)
     m = re.search(r"https://[a-z0-9-]+\.trycloudflare\.com", open("tunnel.log").read())
     if m:
-        url = m.group(0); break
+        url = DEMO_URL = m.group(0); break
 print("\n==============================================")
 print("Ilova:          ", url)
 print("Operator paneli:", f"{url}/operator")
