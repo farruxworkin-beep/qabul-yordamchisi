@@ -85,8 +85,24 @@ def decide(state, predictor, allow_questions=True):
         res["steps"].append({"step": "ood", "sim": round(state["ood_sim"], 3), "tau": round(tau, 3)})
         return {**res, "status": "operator", "reason": REASONS["unknown"]}
 
-    # 5) ishonchli
-    if conf >= thr:
+    # 5a) qisqa va noaniq shikoyat — model ishonchli bo'lsa ham bir marta aniqlashtiramiz
+    if allow_questions and not urgent and not state["asked"]:
+        cands, depts = clarify.vague_candidates(state["norm"])
+        if cands:
+            Pt = clarify.temper(P, labels, depts)
+            scored = [(clarify.info_gain(Pt, clarify._BY_ID[q], labels), q) for q in cands]
+            gain, qid = max(scored)
+            if gain > config.MIN_INFO_GAIN:
+                state["P"] = Pt.tolist()
+                state["cands"] = cands
+                state["asked"].append(qid)
+                res["steps"].append({"step": "vague", "q": qid, "gain": round(gain, 3)})
+                return {**res, "status": "question", "question": clarify.public(clarify._BY_ID[qid]), "reason": None}
+
+    # 5) ishonchli (bemor savollarga javob bergan va bitta bo'lim aniq oldinda bo'lsa — biroz pastroq chegara)
+    second = float(P[order[1]]) if len(order) > 1 else 0.0
+    answered_clear = bool(state["answers"]) and conf >= config.ANSWERED_THRESHOLD and conf - second >= config.ANSWERED_MARGIN
+    if conf >= thr or answered_clear:
         return {**res, "status": "routed", "reason": REASONS["answers" if state["answers"] else "model"]}
 
     # 6) xavfli belgi bor, lekin bo'lim aniq emas — vaqt yo'qotmaymiz
@@ -95,7 +111,9 @@ def decide(state, predictor, allow_questions=True):
 
     # 7) aniqlashtiruvchi savol
     if allow_questions and len(state["asked"]) < config.MAX_QUESTIONS:
-        q, gain = clarify.select_question(P, labels, state["asked"], config.MIN_INFO_GAIN)
+        q, gain = clarify.select_question(P, labels, state["asked"], config.MIN_INFO_GAIN, state.get("cands"))
+        if q is None and state.get("cands"):          # mavzu savollari tugadi — umumiy savollar banki
+            q, gain = clarify.select_question(P, labels, state["asked"], config.MIN_INFO_GAIN)
         if q is not None:
             state["asked"].append(q["id"])
             res["steps"].append({"step": "question", "q": q["id"], "gain": round(gain, 3)})

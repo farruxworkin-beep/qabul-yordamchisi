@@ -27,3 +27,7 @@ MIN_INFO_GAIN = float(os.getenv("TRIAGE_MIN_INFO_GAIN", "0.05"))
 TORCH_THREADS = int(os.getenv("TORCH_THREADS", "4"))
 # "cuda" — Colab GPU'da tezroq; standart "cpu"
 DEVICE = os.getenv("TRIAGE_DEVICE", "cpu")
+
+# Savollarga javob berilgandan keyin: yetakchi bo'lim ishonchi va ikkinchisidan farqi shu qiymatlardan katta bo'lsa yo'naltiriladi
+ANSWERED_THRESHOLD = float(os.environ.get("TRIAGE_ANSWERED_THRESHOLD", 0.45))
+ANSWERED_MARGIN = float(os.environ.get("TRIAGE_ANSWERED_MARGIN", 0.2))

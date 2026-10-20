@@ -14,6 +14,7 @@ matn ─► normallashtirish (kirill→lotin, apostroflar)          app/textnorm
      ─► qaror                                                   app/engine.py
           ├ ishonch ≥ 0.6           → bo'lim
           ├ "boshqa" sinfi          → shifoxonada yo'q yo'nalish + tavsiya (stomatolog, okulist…)
+          ├ qisqa noaniq shikoyat   → albatta savol ("qornim og'riyapti", "болит в груди")
           ├ ishonch past            → aniqlashtiruvchi savol (≤3)  app/clarify.py
           │                            · savol — eng katta axborot yutug'i (entropiya) bo'yicha
           │                            · javob — Bayes formulasi bilan hisobga olinadi
@@ -75,7 +76,7 @@ TRIAGE_MODELS_DIR=triage_models OPERATOR_PASSWORD=parolingiz uvicorn app.main:ap
 
 ### 3) Tekshirish
 ```bash
-python -m pytest -q                       # 11 ta test
+python -m pytest -q                       # 12 ta test
 python evaluate.py path/to/data_v5        # toza test va OOD testida to'liq tizim natijasi
 ```
 
@@ -111,6 +112,7 @@ ishga tushganda tozalanadi — demo uchun yetarli; doimiy saqlash uchun pullik "
 | `TRIAGE_SECRET` | tasodifiy | cookie imzosi kaliti (qayta ishga tushganda saqlanishi uchun bering) |
 | `TRIAGE_THRESHOLD` | 0.6 | avtomatik yo'naltirish ishonch chegarasi |
 | `TRIAGE_MAX_QUESTIONS` | 3 | eng ko'p aniqlashtiruvchi savol |
+| `TRIAGE_ANSWERED_THRESHOLD` | 0.45 | savollarga javobdan keyin yo'naltirish chegarasi (2-o'rindan farq ≥ 0.2) |
 | `TRIAGE_DB` | `triage.db` | SQLite fayli |
 
 ## Zaxira model bilan natija (`evaluate.py`, data_v5)

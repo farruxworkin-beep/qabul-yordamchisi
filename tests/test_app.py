@@ -109,3 +109,15 @@ def test_bayes_and_info_gain():
     post = clarify.update(P, labels, "back_where", "kidney")
     assert post.argmax() == 0 and abs(post.sum() - 1) < 1e-9
     assert np.allclose(clarify.update(P, labels, "back_where", "unknown"), P)
+
+
+def test_vague_complaint_asks_question():
+    """Qisqa, noaniq shikoyatga aniqlashtiruvchi savol beriladi; aniq shikoyat to'g'ridan-to'g'ri yo'naltiriladi."""
+    from app.predictor import Predictor
+    from app import engine
+    p = Predictor()
+    for text in ["qornimning pasti og'riyapti", "boshim aylanyapti", "болит живот", "болит поясница"]:
+        r = engine.decide(engine.new_state(text, p), p)
+        assert r["status"] == "question", text
+    r = engine.decide(engine.new_state("tizzam yiqilgandan keyin shishib ketdi", p), p)
+    assert r["status"] == "routed"

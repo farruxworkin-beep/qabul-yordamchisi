@@ -153,6 +153,64 @@ QUESTIONS = [
     },
 ]
 _BY_ID = {q["id"]: q for q in QUESTIONS}
+
+# Klinik jihatdan noaniq sohalar: qisqa shikoyatda shu sohalar tilga olinsa, model ishonchidan qat'i nazar
+# aniqlashtiruvchi savol beriladi (model bunday qisqa matnlarda ortiqcha ishonadi).
+import re as _re  # noqa: E402
+G, K, T_, N, L, U, TR, P_ = ("gastroenterologiya", "kardiologiya", "terapiya", "nevrologiya", "lor",
+                              "ginekologiya_urologiya", "travmatologiya", "pediatriya")
+# (naqsh, mos savollar, shu shikoyatga mantiqan mos bo'limlar)
+AMBIGUOUS = [
+    (r"qorin|qornim|ichim|живот|низ живота", ["abdomen_where", "cycle", "urine"], [G, U, T_, P_]),
+    (r"\bbel\b|belim|bel og'r|поясниц|спин", ["back_where", "injury", "urine"], [TR, N, U]),
+    (r"ko'krak|ko'kragim|to'sh|груд", ["chest_type"], [K, G, TR, N, T_]),
+    (r"bosh\w* aylan|кружит|головокруж", ["dizzy"], [N, K, L, T_]),
+    (r"bosh\w* og'ri|голов\w* бол|болит голова|голова болит", ["headache_with"], [N, T_, L, K]),
+    (r"ko'ngl\w* ayn|тошни|тошнот", ["abdomen_where", "headache_with"], [G, N, U, T_]),
+    (r"oyog'|oyoq|\bног", ["injury", "numb"], [TR, N, T_]),
+    (r"yo'tal|кашл", ["main_area", "fever"], [T_, L, P_]),
+]
+_AMB = [(_re.compile(p), qs, ds) for p, qs, ds in AMBIGUOUS]
+VAGUE_MAX_WORDS = 4
+TEMPERATURE = 3.0
+TOPIC_MIX = 0.5          # model ehtimoli va shikoyat mavzusi bo'yicha bo'limlar aralashmasi
+
+
+def vague_candidates(norm_text):
+    """Qisqa va noaniq shikoyat bo'lsa — (mos savollar, mos bo'limlar), aks holda ([], [])."""
+    if len(norm_text.split()) > VAGUE_MAX_WORDS:
+        return [], []
+    qs_out, ds_out = [], []
+    for p, qs, ds in _AMB:
+        if p.search(norm_text):
+            qs_out += [q for q in qs if q not in qs_out]
+            ds_out += [d for d in ds if d not in ds_out]
+    return qs_out, ds_out
+
+
+def temper(P, labels, depts=(), T=TEMPERATURE, mix=TOPIC_MIX):
+    """Qisqa shikoyat uchun ehtimolni "yumshatish":
+    1) temperature scaling P^(1/T) — modelning ortiqcha ishonchini kamaytiradi;
+    2) shikoyat mavzusiga mos bo'limlar (masalan ko'krak → kardio, gastro, travma...) bilan aralashtirish.
+    "boshqa" sinfining ehtimoli o'zgarmaydi (sun'iy ko'tarilmasin)."""
+    P = np.asarray(P, dtype=float)
+    Q = np.power(np.clip(P, 1e-9, 1), 1.0 / T)
+    keep = labels.index("boshqa") if "boshqa" in labels else None
+    mask = np.ones(len(P), bool)
+    if keep is not None:
+        mask[keep] = False
+    Q[mask] = Q[mask] / Q[mask].sum()
+    idx = [labels.index(d) for d in depts if d in labels]
+    if idx:
+        topic = np.zeros(len(P)); topic[idx] = 1.0 / len(idx)
+        Q[mask] = (1 - mix) * Q[mask] + mix * topic[mask]
+    rest = 1 - (P[keep] if keep is not None else 0)
+    Q[mask] = Q[mask] / Q[mask].sum() * rest
+    if keep is not None:
+        Q[keep] = P[keep]
+    return Q
+
+
 UNKNOWN = {"id": "unknown", "uz": "Bilmayman", "ru": "Не знаю"}
 
 
@@ -178,11 +236,12 @@ def info_gain(P, q, labels):
     return _entropy(P) - h_after
 
 
-def select_question(P, labels, asked, min_gain):
-    """Hali berilmagan savollar ichidan eng foydalisini tanlaydi (yoki None)."""
+def select_question(P, labels, asked, min_gain, allowed=None):
+    """Hali berilmagan savollar ichidan eng foydalisini tanlaydi (yoki None).
+    allowed — faqat shu savollar orasidan (shikoyat mavzusiga mos)."""
     best, best_gain = None, min_gain
     for q in QUESTIONS:
-        if q["id"] in asked:
+        if q["id"] in asked or (allowed and q["id"] not in allowed):
             continue
         g = info_gain(P, q, labels)
         if g > best_gain:
